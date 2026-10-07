@@ -13,6 +13,7 @@ import { Tooltip } from "@/components/ui/tooltip";
 import { useSelectedMailbox } from "@/components/mailbox-provider";
 import { authFetch } from "@/lib/auth/client";
 import { formatEmailAddress, getEmailAddress } from "@/lib/email/address";
+import { useCompose } from "@/components/compose/compose-context";
 import { cn } from "@/lib/utils";
 import { SendReview } from "@/components/agent/send-review";
 import type { ReviewSnapshot } from "@/components/agent/send-review-types";
@@ -45,6 +46,7 @@ export function ComposeForm({
 }) {
 	const { t } = useLanguage();
 	const router = useRouter();
+	const { showNotice } = useCompose();
 	const { selectedMailbox, setSelectedMailbox, mailboxes } = useSelectedMailbox();
 	const [draftId, setDraftId] = useState<string | null>(null);
 	const [agentRevision, setAgentRevision] = useState<number | null>(null);
@@ -253,6 +255,7 @@ export function ComposeForm({
 			setToast({ type: "error", message: t("compose.error.emptyBody") });
 			return;
 		}
+		if (saveTimer.current) clearTimeout(saveTimer.current);
 		setLoading(true);
 		const fullHtml = joinQuotedHtml(html, quotedHtml);
 		if (draftId && agentRevision !== null) {
@@ -310,6 +313,7 @@ export function ComposeForm({
 				window.dispatchEvent(new Event("mailflare:messages-changed"));
 			});
 		}
+		draftGeneration.current += 1;
 		setDraftId(null);
 		setTo([]);
 		setCc([]);
@@ -323,8 +327,14 @@ export function ComposeForm({
 		setQuotedHtml(null);
 		setAttachments([]);
 		setScheduledAt(null);
-		setToast({ type: "success", message: data.scheduled ? t("compose.scheduled") : t("compose.sent") });
+		showNotice(data.scheduled ? t("compose.scheduled") : t("compose.sent"));
 		window.dispatchEvent(new Event("mailflare:messages-changed"));
+
+		if (onClose) {
+			onClose();
+			return;
+		}
+		router.push("/sent");
 	}
 
 	async function deleteDraftAndClose() {
