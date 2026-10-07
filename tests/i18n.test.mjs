@@ -104,7 +104,7 @@ test("missing, invalid and unsupported locale values fall back to English", () =
 });
 
 test("translation uses the requested catalog and falls back per key", async () => {
-	assert.equal(i18n.translate(await i18n.loadMessages("pt-BR"), "navigation.inbox"), "Caixa de entrada");
+	assert.equal(i18n.translate(await i18n.loadMessages("pt-BR"), "navigation.inbox"), "Entrada");
 	assert.equal(i18n.translate({}, "navigation.inbox"), "Inbox");
 });
 
@@ -116,7 +116,7 @@ test("preference cookie persists for a year, covers every path and is Secure on 
 
 test("provider server rendering uses initial locale and labels the native language selector", async () => {
 	const pt = await i18n.renderLanguage("pt-BR");
-	assert.match(pt, /Caixa de entrada/);
+	assert.match(pt, /<span>Entrada<\/span>/);
 	assert.match(pt, /<label for="[^"]+"[^>]*>Idioma<\/label>/);
 	assert.match(pt, /<select id="[^"]+"/);
 	assert.match(pt, /value="pt-BR" lang="pt-BR" selected=""/);
@@ -126,7 +126,7 @@ test("provider server rendering uses initial locale and labels the native langua
 test("root layout passes the same cookie locale to HTML and provider on first render", async () => {
 	const pt = await i18n.renderLayout("pt-BR");
 	assert.match(pt, /<html lang="pt-BR"/);
-	assert.match(pt, /Caixa de entrada/);
+	assert.match(pt, /<span>Entrada<\/span>/);
 	for (const value of [undefined, "bad"]) {
 		const english = await i18n.renderLayout(value);
 		assert.match(english, /<html lang="en"/);
@@ -161,6 +161,6 @@ test("a locale registered once reaches resolution, translation, cookie, selector
 test("translations interpolate {vars}, keep unknown placeholders and default to ltr", async () => {
 	assert.equal(i18n.translate({ "navigation.inbox": "Hi {name}, {other}" }, "navigation.inbox", { name: "Ana", count: 2 }), "Hi Ana, {other}");
 	assert.equal(i18n.translate({}, "navigation.inbox", { name: "x" }), "Inbox");
-	assert.equal(i18n.createTranslator("pt-BR", await i18n.loadMessages("pt-BR"))("navigation.inbox", { count: 2 }), "Caixa de entrada");
+	assert.equal(i18n.createTranslator("pt-BR", await i18n.loadMessages("pt-BR"))("navigation.inbox", { count: 2 }), "Entrada");
 	assert.equal(i18n.getDirection("en"), "ltr");
 });
