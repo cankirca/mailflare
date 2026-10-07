@@ -52,12 +52,14 @@ async function bundleI18n(outfile, extraLocale = false) {
 						xx: { label: "Testlandic", dir: "rtl", load: async () => ({ ...en, "navigation.inbox": "Entrada", "navigation.inbox.one": "{count} entrada", "navigation.inbox.other": "{count} entradas", "language.label": "Idioma" }) },`),
 					loader: "ts",
 				}));
-				builder.onResolve({ filter: /^(next\/headers|next\/font\/google|@\/components\/providers)$/ }, (args) => ({ path: args.path, namespace: "stub" }));
+				builder.onResolve({ filter: /^(next\/headers|next\/font\/google|@\/components\/providers|\.\/home-server-utils)$/ }, (args) => ({ path: args.path, namespace: "stub" }));
 				builder.onLoad({ filter: /.*/, namespace: "stub" }, ({ path }) => ({ contents: path === "next/headers"
 					? 'export async function cookies() { return { get(name) { return name === "mailflare-locale" && globalThis.testLocaleCookie !== undefined ? { value: globalThis.testLocaleCookie } : undefined; } }; }'
 					: path === "next/font/google"
 						? 'export const Geist = () => ({ variable: "sans" }); export const Geist_Mono = () => ({ variable: "mono" });'
-						: 'export function Providers({ children }) { return children; }' }));
+						: path === "./home-server-utils"
+							? 'export async function getHomeBranding() { return { appName: "Mailflare", hasCustomIcon: false, canCustomizeBranding: false }; }'
+							: 'export function Providers({ children }) { return children; }' }));
 				builder.onLoad({ filter: /\.css$/ }, () => ({ contents: "", loader: "js" }));
 			},
 		}],
