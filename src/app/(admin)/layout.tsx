@@ -1,5 +1,6 @@
 "use client";
 
+import { SkipToContent } from "@/components/skip-to-content";
 import Link from "next/link";
 import { HelpCircle, Search } from "lucide-react";
 import { useLanguage } from "@/components/language-provider";
@@ -52,6 +53,7 @@ export default function DashboardLayout({
         <ComposeProvider>
           <ShortcutsProvider>
           <div className="grid h-dvh grid-cols-[minmax(0,1fr)] md:grid-cols-[var(--sidebar-width)_minmax(0,1fr)] overflow-hidden bg-[#f6f8fc] transition-[grid-template-columns]" style={{ transitionDuration: "var(--sidebar-transition-duration)" }}>
+            <SkipToContent />
             <SidebarAside>
               <div className="h-full">
                 <AdminNav />
@@ -64,7 +66,7 @@ export default function DashboardLayout({
                 <LicenseIndicator />
                 <MailboxSelector />
               </span>
-              <main className={clsx("page-flush min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain rounded-tl-3xl max-md:rounded-t-3xl max-md:bg-white max-md:pb-24 px-6 py-10 scrollbar-gutter-stable lg:px-12", mobileTitle && "max-md:[&_h1]:hidden")}>
+              <main id="main-content" tabIndex={-1} className={clsx("focus:outline-none page-flush min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain rounded-tl-3xl max-md:rounded-t-3xl max-md:bg-white max-md:pb-24 px-6 py-10 scrollbar-gutter-stable lg:px-12", mobileTitle && "max-md:[&_h1]:hidden")}>
                 <div className="w-full max-w-3xl">{children}</div>
               </main>
             </div>
