@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 type ComposeContextValue = {
@@ -9,6 +9,8 @@ type ComposeContextValue = {
 	openComposer: () => void;
 	openDraftComposer: (draftId: string) => void;
 	closeComposer: () => void;
+	notice: string | null;
+	showNotice: (message: string) => void;
 };
 
 const ComposeContext = createContext<ComposeContextValue | null>(null);
@@ -22,6 +24,13 @@ export function useCompose() {
 export function ComposeProvider({ children }: { children: ReactNode }) {
 	const [open, setOpen] = useState(false);
 	const [draftId, setDraftId] = useState<string | null>(null);
+	const [notice, setNotice] = useState<string | null>(null);
+
+	useEffect(() => {
+		if (!notice) return;
+		const timer = setTimeout(() => setNotice(null), 3200);
+		return () => clearTimeout(timer);
+	}, [notice]);
 
 	return (
 		<ComposeContext.Provider
@@ -40,6 +49,8 @@ export function ComposeProvider({ children }: { children: ReactNode }) {
 					setOpen(false);
 					setDraftId(null);
 				},
+				notice,
+				showNotice: setNotice,
 			}}
 		>
 			{children}
