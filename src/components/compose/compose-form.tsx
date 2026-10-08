@@ -74,6 +74,7 @@ export function ComposeForm({
 	const [loadedDraftMailboxId, setLoadedDraftMailboxId] = useState<string | null>(null);
 	const [loadedDraftFrom, setLoadedDraftFrom] = useState<string | null>(null);
 	const [selectedFrom, setSelectedFrom] = useState("");
+	const formRef = useRef<HTMLFormElement>(null);
 	const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const draftGeneration = useRef(0);
 	const attachmentInput = useRef<HTMLInputElement | null>(null);
@@ -237,6 +238,11 @@ export function ComposeForm({
 			if (saveTimer.current) clearTimeout(saveTimer.current);
 		};
 	}, [bcc, cc, draftId, fromAddr, html, loadingDraft, quotedHtml, selectedMailbox?.id, selectedMailbox?.signature, subject, threading, to]);
+
+	useEffect(() => {
+		if (!draftIdToLoad || loadingDraft) return;
+		formRef.current?.querySelector<HTMLElement>("[contenteditable='true']")?.focus();
+	}, [draftIdToLoad, loadingDraft]);
 
 	async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
@@ -512,7 +518,7 @@ export function ComposeForm({
 					{toast.message}
 				</div>
 			)}
-			<form onSubmit={onSubmit} className={frameClass} role={modalMode && !minimized ? "dialog" : undefined} aria-modal={modalMode && !minimized || undefined} aria-label={modalMode && !minimized ? t("compose.dialogLabel") : undefined} onKeyDown={(event) => { if (modalMode && !minimized && event.key === "Escape") { event.preventDefault(); setModalMode(false); } }} onDragEnterCapture={minimized ? undefined : onFileDragEnter} onDragOverCapture={minimized ? undefined : onFileDragOver} onDragLeaveCapture={minimized ? undefined : onFileDragLeave} onDropCapture={minimized ? undefined : onFileDrop}>
+			<form onSubmit={onSubmit} className={frameClass} ref={formRef} role={modalMode && !minimized ? "dialog" : mode === "popup" ? "region" : undefined} aria-modal={modalMode && !minimized || undefined} aria-label={mode === "popup" ? t("compose.dialogLabel") : undefined} onKeyDown={(event) => { if (modalMode && !minimized && event.key === "Escape") { event.preventDefault(); setModalMode(false); } }} onDragEnterCapture={minimized ? undefined : onFileDragEnter} onDragOverCapture={minimized ? undefined : onFileDragOver} onDragLeaveCapture={minimized ? undefined : onFileDragLeave} onDropCapture={minimized ? undefined : onFileDrop}>
 				{draggingFiles && !minimized && (
 					<div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center border-2 border-dashed border-blue-400 bg-blue-50/90 text-sm font-medium text-blue-700" aria-hidden="true">
 						{t("compose.dropFiles")}
@@ -572,6 +578,7 @@ export function ComposeForm({
 					onChange={setTo}
 					placeholder={t("compose.toPlaceholder")}
 					required
+					autoFocus={!draftIdToLoad}
 					disabled={loadingDraft}
 					trailing={
 						<>
