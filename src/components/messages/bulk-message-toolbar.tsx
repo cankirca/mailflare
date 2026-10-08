@@ -90,7 +90,7 @@ export function BulkMessageToolbar({
 			<DropdownMenu.Root>
 				<Tooltip label={t("common.moveSelected")} className="max-md:hidden">
 					<DropdownMenu.Trigger asChild>
-						<Button variant="ghost" size="sm" className="max-md:hidden gap-1.5 bg-white text-xs font-medium text-neutral-700" disabled={pending} aria-label={t("common.moveSelected")}>
+						<Button variant="ghost" size="sm" className="max-md:hidden gap-1.5 bg-white text-xs font-medium text-neutral-700" disabled={pending}>
 							<FolderInput className="h-4 w-4" />
 							{t("common.moveTo")}
 							<ChevronDown className="h-3.5 w-3.5 text-neutral-500" />

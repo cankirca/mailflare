@@ -49,12 +49,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
 				<PwaServiceWorker />
 				{children}
 				<ThemeSync />
-				{realtime.notification && (
-					<NewMessagePopup
-						notification={realtime.notification}
-						onDismiss={realtime.dismissNotification}
-					/>
-				)}
+				<div role="status" aria-live="polite">
+					{realtime.notification && (
+						<NewMessagePopup
+							notification={realtime.notification}
+							onDismiss={realtime.dismissNotification}
+						/>
+					)}
+				</div>
 			</BrandingProvider>
 		</QueryClientProvider>
 	);
