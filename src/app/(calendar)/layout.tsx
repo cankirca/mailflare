@@ -23,6 +23,7 @@ import clsx from "clsx";
 import { CalendarMobileUpcoming } from "./calendar-mobile-upcoming";
 import { useDashboardState } from "../(dashboard)/dashboard-state";
 import { useAssistantAvailability } from "../(dashboard)/use-assistant-availability";
+import { RouteTitle } from "@/components/route-title";
 
 export default function CalendarLayout({ children }: { children: React.ReactNode }) {
   const { t } = useLanguage();
@@ -46,6 +47,7 @@ export default function CalendarLayout({ children }: { children: React.ReactNode
           <ComposeProvider>
             <MailSearchProvider>
               <ShortcutsProvider>
+                <RouteTitle />
               <div className="grid h-dvh grid-cols-[minmax(0,1fr)] overflow-hidden bg-[#f6f8fc]">
                 <SidebarAside className="md:hidden"><CalendarMobileUpcoming /></SidebarAside>
                 <div className="flex min-h-0 min-w-0 flex-col">
