@@ -77,6 +77,7 @@ export function ComposeForm({
 	const [loadedDraftFrom, setLoadedDraftFrom] = useState<string | null>(null);
 	const [selectedFrom, setSelectedFrom] = useState("");
 	const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const pendingSave = useRef<(() => Promise<void>) | null>(null);
 	const draftGeneration = useRef(0);
 	const attachmentInput = useRef<HTMLInputElement | null>(null);
 	const fileDragDepth = useRef(0);
@@ -197,7 +198,12 @@ export function ComposeForm({
 		previousSignature.current = nextSignature;
 	}, [loadingDraft, selectedMailbox?.id, selectedMailbox?.signature]);
 
+	useEffect(() => () => {
+		void pendingSave.current?.();
+	}, []);
+
 	useEffect(() => {
+		pendingSave.current = null;
 		const bodyContent = htmlToPlainText(html).trim();
 		const signatureOnly = bodyContent === (selectedMailbox?.signature?.trim() ?? "");
 		const hasContent =
@@ -206,7 +212,7 @@ export function ComposeForm({
 		if (saveTimer.current) clearTimeout(saveTimer.current);
 
 		const generation = draftGeneration.current;
-		saveTimer.current = setTimeout(async () => {
+		const save = async () => {
 			const payload = {
 				mailboxId: selectedMailbox?.id,
 				from: fromAddr,
@@ -233,6 +239,11 @@ export function ComposeForm({
 				}
 				setDraftId(data.draft.id);
 			}
+		};
+		pendingSave.current = save;
+		saveTimer.current = setTimeout(() => {
+			pendingSave.current = null;
+			void save();
 		}, 900);
 
 		return () => {
@@ -256,6 +267,7 @@ export function ComposeForm({
 			return;
 		}
 		if (saveTimer.current) clearTimeout(saveTimer.current);
+		pendingSave.current = null;
 		setLoading(true);
 		const fullHtml = joinQuotedHtml(html, quotedHtml);
 		if (draftId && agentRevision !== null) {
@@ -283,24 +295,32 @@ export function ComposeForm({
 			finally { setLoading(false); }
 			return;
 		}
-		const res = await authFetch("/api/send", {
-			method: "POST",
-			body: buildSendFormData({
-				attachments,
-				from: fromAddr,
-				to: recipientsToHeader(to),
-				cc: recipientsToHeader(cc),
-				bcc: recipientsToHeader(bcc),
-				subject,
-				text: htmlToPlainText(fullHtml),
-				html: fullHtml,
-				mailboxId: selectedMailbox?.id,
-				threading: threading ?? undefined,
-				draftId,
-				scheduledAt,
-			}),
-		});
-		const data = (await res.json()) as { messageId?: string; scheduled?: boolean; error?: string };
+		let res: Response;
+		let data: { messageId?: string; scheduled?: boolean; error?: string };
+		try {
+			res = await authFetch("/api/send", {
+				method: "POST",
+				body: buildSendFormData({
+					attachments,
+					from: fromAddr,
+					to: recipientsToHeader(to),
+					cc: recipientsToHeader(cc),
+					bcc: recipientsToHeader(bcc),
+					subject,
+					text: htmlToPlainText(fullHtml),
+					html: fullHtml,
+					mailboxId: selectedMailbox?.id,
+					threading: threading ?? undefined,
+					draftId,
+					scheduledAt,
+				}),
+			});
+			data = (await res.json()) as { messageId?: string; scheduled?: boolean; error?: string };
+		} catch {
+			setLoading(false);
+			setToast({ type: "error", message: t("compose.error.sendFailed") });
+			return;
+		}
 		setLoading(false);
 
 		if (!res.ok) {
@@ -339,12 +359,19 @@ export function ComposeForm({
 
 	async function deleteDraftAndClose() {
 		if (saveTimer.current) clearTimeout(saveTimer.current);
+		pendingSave.current = null;
 		draftGeneration.current += 1;
 		setDeletingDraft(true);
 
 		if (draftId) {
-			const res = await authFetch(`/api/drafts/${draftId}`, { method: "DELETE" });
-			if (!res.ok) {
+			let deleted = false;
+			try {
+				const res = await authFetch(`/api/drafts/${draftId}`, { method: "DELETE" });
+				deleted = res.ok || res.status === 404;
+			} catch {
+				deleted = false;
+			}
+			if (!deleted) {
 				setDeletingDraft(false);
 				setToast({ type: "error", message: t("compose.error.deleteDraft") });
 				return;
