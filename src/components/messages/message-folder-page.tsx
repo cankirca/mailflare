@@ -295,6 +295,7 @@ export function MessageFolderPage({
 	>([]);
 	const [pendingBulkAction, setPendingBulkAction] = useState(false);
 	const [emptyingFolder, setEmptyingFolder] = useState(false);
+	const [actionError, setActionError] = useState<string | null>(null);
 	const [unreadOnly, setUnreadOnly] = useState(false);
 	const [conversationView] = useConversationView();
 	const grouped = conversationView && config.folder !== "drafts";
@@ -394,6 +395,21 @@ export function MessageFolderPage({
 		}
 	}
 
+	useEffect(() => {
+		if (!actionError) return;
+		const timer = setTimeout(() => setActionError(null), 6000);
+		return () => clearTimeout(timer);
+	}, [actionError]);
+
+	async function runSelectedActionReportingErrors(action: BulkMessageAction, folderId?: string) {
+		setActionError(null);
+		try {
+			await runSelectedAction(action, folderId);
+		} catch {
+			setActionError(t("actions.error.update"));
+		}
+	}
+
 	async function runSelectedAction(action: BulkMessageAction, folderId?: string) {
 		if (selectedIds.length === 0) return;
 		if (action === "delete") {
@@ -451,7 +467,7 @@ export function MessageFolderPage({
 						<BulkMessageToolbar
 							selectedCount={selectedIds.length}
 							hasUnreadSelection={hasUnreadSelection}
-							onAction={runSelectedAction}
+							onAction={runSelectedActionReportingErrors}
 							onClearSelection={() => setSelectedMessages([])}
 							pending={pendingBulkAction}
 							folder={config.folderId ? undefined : config.folder}
@@ -527,6 +543,12 @@ export function MessageFolderPage({
 				)}
 			</div>
 
+			{actionError && (
+				<p role="alert" className="shrink-0 border-b border-red-100 bg-red-50 px-6 py-2 text-sm font-medium text-red-700">
+					{actionError}
+				</p>
+			)}
+
 			<div className="min-h-0 flex-1 divide-y divide-neutral-100 overflow-y-auto overscroll-contain scrollbar-gutter-stable">
 				{messages.map((message) => (
 					<MessageListRow
@@ -538,9 +560,13 @@ export function MessageFolderPage({
 						compact={compact || isMobile}
 						currentAccountName={currentAccountName}
 						onSelectedChange={updateSelectedMessage}
-						onMessageAction={(messageId, action) =>
-							runBulkMessageAction(expandSelectedIds([messageId]), action, action !== "read" && action !== "unread")
-						}
+						onMessageAction={(messageId, action) => {
+							setActionError(null);
+							return runBulkMessageAction(expandSelectedIds([messageId]), action, action !== "read" && action !== "unread").catch((error) => {
+								setActionError(t("actions.error.update"));
+								throw error;
+							});
+						}}
 						dragMessageIds={expandSelectedIds(selectedIds.includes(message.id) ? selectedIds : [message.id])}
 					/>
 				))}
