@@ -359,6 +359,19 @@ export function MessageFolderPage({
 		});
 	}, [title, config.folder, config.folderId, mailboxAddress, mailboxesLoading, titleTotal, titleUnread]);
 
+	useEffect(() => {
+		if (isLoading) return;
+		setSelectedMessages((current) => {
+			const remaining = current.filter((item) => messages.some((message) => message.id === item.id));
+			return remaining.length === current.length ? current : remaining;
+		});
+	}, [messages, isLoading]);
+
+	useEffect(() => {
+		if (isLoading || offset === 0 || messages.length > 0) return;
+		setOffset(total > 0 ? Math.floor((total - 1) / limit) * limit : 0);
+	}, [isLoading, offset, messages.length, total, limit]);
+
 	function updateSelectedMessage(messageId: string, selected: boolean) {
 		const message = messages.find((item) => item.id === messageId);
 		if (!message) return;
