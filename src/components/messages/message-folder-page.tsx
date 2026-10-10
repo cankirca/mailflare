@@ -343,6 +343,13 @@ export function MessageFolderPage({
 	}, [offset]);
 
 	useEffect(() => {
+		const originalTitle = document.title;
+		return () => {
+			document.title = originalTitle;
+		};
+	}, []);
+
+	useEffect(() => {
 		if (mailboxesLoading) return;
 		document.title = formatEmailPageTitle({
 			location: title,

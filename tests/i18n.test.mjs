@@ -64,13 +64,15 @@ async function bundleI18n(outfile, extraLocale = false) {
 						xx: { label: "Testlandic", dir: "rtl" },`),
 					loader: "ts",
 				}));
-				builder.onResolve({ filter: /^(next\/headers|next\/font\/google|@\/components\/providers|@\/lib\/cloudflare)$/ }, (args) => ({ path: args.path, namespace: "stub" }));
+				builder.onResolve({ filter: /^(next\/headers|next\/font\/google|@\/components\/providers|@\/lib\/cloudflare|\.\/home-server-utils)$/ }, (args) => ({ path: args.path, namespace: "stub" }));
 				builder.onLoad({ filter: /.*/, namespace: "stub" }, ({ path }) => ({ contents: path === "next/headers"
 					? 'export async function cookies() { return { get(name) { return name === "mailflare-locale" && globalThis.testLocaleCookie !== undefined ? { value: globalThis.testLocaleCookie } : undefined; } }; }'
 					: path === "next/font/google"
 						? 'export const Geist = () => ({ variable: "sans" }); export const Geist_Mono = () => ({ variable: "mono" });'
-						: path === "@/lib/cloudflare"
-							? "export function getEnv() { return { ASSETS: { fetch: globalThis.readTestAsset } }; }"
+						: path === "./home-server-utils"
+							? 'export async function getHomeBranding() { return { appName: "Mailflare", hasCustomIcon: false, canCustomizeBranding: false }; }'
+							: path === "@/lib/cloudflare"
+								? "export function getEnv() { return { ASSETS: { fetch: globalThis.readTestAsset } }; }"
 							: 'export function Providers({ children }) { return children; }' }));
 				builder.onLoad({ filter: /\.css$/ }, () => ({ contents: "", loader: "js" }));
 			},
