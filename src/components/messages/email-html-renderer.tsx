@@ -18,6 +18,7 @@ export function EmailHtmlRenderer({ html, className, preserveLeadingQuote = fals
 	html: string; className?: string; preserveLeadingQuote?: boolean;
 }) {
 	const { t } = useLanguage();
+	const quoteToggleLabel = t("message.quote.toggle");
 	const host = useRef<HTMLDivElement>(null);
 	const [allowedSource, setAllowedSource] = useState<string | null>(null);
 	const [hasRemote, setHasRemote] = useState(false);
@@ -31,7 +32,7 @@ export function EmailHtmlRenderer({ html, className, preserveLeadingQuote = fals
 		const base = document.createElement("style");
 		base.textContent = `${BASE_STYLE}\n${prepared.rootTag} { display:block; font:14px/1.5 Arial,sans-serif; color:#202124; background:#fff; color-scheme:light; }\n${prepared.bodyTag} { display:block; }`;
 		const content = document.createElement("template");
-		content.innerHTML = collapseQuotedEmailHtml(prepared.html, preserveLeadingQuote) ?? "";
+		content.innerHTML = collapseQuotedEmailHtml(prepared.html, preserveLeadingQuote, quoteToggleLabel) ?? "";
 		root.replaceChildren(base, content.content);
 		const mailBody = root.querySelector(prepared.bodyTag);
 		// An LTR scroller cannot reach left-side overflow from an RTL email.
@@ -51,7 +52,7 @@ export function EmailHtmlRenderer({ html, className, preserveLeadingQuote = fals
 		};
 		root.addEventListener("click", navigate);
 		return () => root.removeEventListener("click", navigate);
-	}, [html, allowRemote, preserveLeadingQuote]);
+	}, [html, allowRemote, preserveLeadingQuote, quoteToggleLabel]);
 	return <div className={`min-w-0 max-w-full ${className ?? ""}`}>
 		{hasRemote && <div className="mb-2 flex justify-end">
 			<button type="button" aria-pressed={allowRemote} className="rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"

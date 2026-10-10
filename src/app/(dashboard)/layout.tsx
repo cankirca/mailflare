@@ -1,5 +1,6 @@
 "use client";
 
+import { SkipToContent } from "@/components/skip-to-content";
 import { useEffect } from "react";
 import {  Sparkles } from "lucide-react";
 import { useLanguage } from "@/components/language-provider";
@@ -50,6 +51,7 @@ export default function DashboardLayout({
               <ShortcutsProvider>
                 <RouteTitle />
                 <div className="grid h-dvh grid-cols-[minmax(0,1fr)] overflow-hidden bg-[#f6f8fc] transition-[grid-template-columns] md:grid-cols-[var(--sidebar-width)_minmax(0,1fr)]" style={{ transitionDuration: "var(--sidebar-transition-duration)" }}>
+                  <SkipToContent />
                   <SidebarAside>
                     <div className="h-full">
                       <DashboardNav />
@@ -73,7 +75,7 @@ export default function DashboardLayout({
                     </header>
                     <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
                       <AssistantOpenContext.Provider value={assistantVisible}>
-                        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto rounded-t-3xl bg-white overscroll-contain scrollbar-gutter-stable" aria-hidden={assistantVisible && assistantFullSize} inert={assistantVisible && assistantFullSize}>
+                        <main id="main-content" tabIndex={-1} className="focus:outline-none min-h-0 min-w-0 flex-1 overflow-y-auto rounded-t-3xl bg-white overscroll-contain scrollbar-gutter-stable" aria-hidden={assistantVisible && assistantFullSize} inert={assistantVisible && assistantFullSize}>
                           {children}
                         </main>
                       </AssistantOpenContext.Provider>
