@@ -7,6 +7,7 @@ import { useLanguage } from "@/components/language-provider";
 import { useCompose } from "@/components/compose/compose-context";
 import { MessageSourceDialog } from "@/components/messages/message-source-dialog";
 import { useDismissible } from "@/components/use-dismissible";
+import { useMessageListVisibility } from "@/components/messages/message-list-visibility";
 import { MessageSnoozeDialog } from "./message-snooze-dialog";
 import { useIsMobile } from "@/components/sidebar-mobile-utils";
 import { useHotkeys, useShortcuts } from "@/components/shortcuts";
@@ -51,6 +52,7 @@ export function MessageActions({
 	const router = useRouter();
 	const isMobile = useIsMobile();
 	const { openDraftComposer } = useCompose();
+	const { backHref: listHref } = useMessageListVisibility();
 	const { shortcutsEnabled } = useShortcuts();
 	const [pendingAction, setPendingAction] = useState<
 		BulkMessageAction | "unsubscribe" | ReplyMode | "forward" | "block" | null
@@ -68,7 +70,7 @@ export function MessageActions({
 		setError(null);
 		try {
 			await runSingleMessageAction(messageId, action);
-			const redirect = getMessageActionRedirect(action, direction);
+			const redirect = getMessageActionRedirect(action, listHref);
 			if (redirect) router.push(redirect);
 			router.refresh();
 		} catch {
@@ -76,7 +78,7 @@ export function MessageActions({
 		} finally {
 			setPendingAction(null);
 		}
-	}, [messageId, direction, router, t]);
+	}, [messageId, listHref, router, t]);
 
 	// In Trash and Spam the delete button removes the message for good instead of
 	// being a no-op, after the user confirms.
@@ -240,7 +242,7 @@ export function MessageActions({
 		try {
 			await blockMessageContact({ mailboxId, senderAddress });
 			await runSingleMessageAction(messageId, "trash");
-			router.push("/trash");
+			router.push(listHref);
 			router.refresh();
 		} catch (blockError) {
 			setError(blockError instanceof Error ? blockError.message : t("message.error.block"));

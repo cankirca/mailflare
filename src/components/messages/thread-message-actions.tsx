@@ -54,7 +54,7 @@ export function ThreadMessageActions({
 		setPending(true);
 		setError(null);
 		try {
-			setStarred(await toggleMessageStar(message.id));
+			setStarred((await toggleMessageStar(message.id)).starred);
 		} catch (nextError) {
 			setError(nextError instanceof Error ? nextError.message : t("message.error.star"));
 		} finally {
