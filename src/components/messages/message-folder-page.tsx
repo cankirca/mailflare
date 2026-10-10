@@ -11,6 +11,7 @@ import { Tooltip } from "@/components/ui/tooltip";
 import { useMailSearch } from "@/components/mail-search/mail-search-context";
 import { useSelectedMailbox } from "@/components/mailbox-provider";
 import { usePageLoading } from "@/components/page-loading";
+import { formatScheduledSendTime } from "./scheduled-send-utils";
 import { useIsMobile } from "@/components/sidebar-mobile-utils";
 import { useMessageCounts } from "@/hooks/use-message-counts";
 import { useMessages } from "@/hooks/use-messages";
@@ -117,7 +118,7 @@ function MessageListRow({
 		navigation.onNavigate(event, !read);
 	}
 
-	if (compact && config.folder !== "drafts") {
+	if (compact) {
 		const compactRow = (
 			<div
 				role={swipeable ? undefined : "listitem"}
@@ -140,7 +141,7 @@ function MessageListRow({
 					className="mt-1 h-4 w-4 rounded border-neutral-300"
 					aria-label={t("list.selectFrom", { sender: party })}
 				/>
-				<Link href={href} onClick={onMessageNavigate} aria-current={active ? "true" : undefined} className="min-w-0">
+				<Link href={href} onClick={config.folder === "drafts" ? undefined : onMessageNavigate} aria-current={active ? "true" : undefined} className="min-w-0">
 					<span className="flex items-baseline justify-between gap-3">
 						<span className={clsx(unread && "font-semibold",getMessagePartyClassName(rowMessage, config.folder))}>
 							{unread && <span className="sr-only">{t("list.unread")} </span>}
@@ -151,7 +152,7 @@ function MessageListRow({
 							)}
 						</span>
 						<span className={clsx(unread ?"font-medium":"text-neutral-400","shrink-0 text-[11px]")}>
-							{formatMessageListTimestamp(message.createdAt)}
+							{message.scheduledAt ? formatScheduledSendTime(message.scheduledAt, t) : formatMessageListTimestamp(message.createdAt)}
 						</span>
 					</span>
 					<span
@@ -189,7 +190,7 @@ function MessageListRow({
 	}
 
 	const className =
-		`group relative grid min-h-12 w-full grid-cols-[24px_32px_minmax(160px,260px)_1fr_auto] items-center gap-3 px-6 text-left text-sm hover:z-10 hover:bg-[#f2f6fc] hover:shadow-sm has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-inset has-[a:focus-visible]:ring-blue-600 ${active || selected ? "bg-blue-50" : ""
+		`group relative grid min-h-12 w-full grid-cols-[24px_32px_minmax(160px,80px)_1fr_auto] items-center gap-3 px-6 text-left text-sm hover:z-10 hover:bg-[#f2f6fc] hover:shadow-sm has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-inset has-[a:focus-visible]:ring-blue-600 ${active || selected ? "bg-blue-50" : ""
 		} ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`;
 	const content = (
 		<>
@@ -239,7 +240,7 @@ function MessageListRow({
 				className={`min-w-[96px] whitespace-nowrap text-right text-xs group-hover:opacity-0 ${unread ? "font-semibold text-neutral-800" : "text-neutral-500"
 					}`}
 			>
-				{formatMessageListTimestamp(message.createdAt)}
+				{message.scheduledAt ? formatScheduledSendTime(message.scheduledAt, t) : formatMessageListTimestamp(message.createdAt)}
 			</time>
 		</>
 	);
@@ -303,6 +304,7 @@ export function MessageFolderPage({
 	>([]);
 	const [pendingBulkAction, setPendingBulkAction] = useState(false);
 	const [emptyingFolder, setEmptyingFolder] = useState(false);
+	const [actionError, setActionError] = useState<string | null>(null);
 	const [unreadOnly, setUnreadOnly] = useState(false);
 	const [conversationView] = useConversationView();
 	const grouped = conversationView && config.folder !== "drafts";
@@ -350,6 +352,13 @@ export function MessageFolderPage({
 	}, [offset]);
 
 	useEffect(() => {
+		const originalTitle = document.title;
+		return () => {
+			document.title = originalTitle;
+		};
+	}, []);
+
+	useEffect(() => {
 		if (mailboxesLoading) return;
 		document.title = formatEmailPageTitle({
 			location: title,
@@ -359,6 +368,19 @@ export function MessageFolderPage({
 			emailAddress: mailboxAddress,
 		});
 	}, [title, config.folder, config.folderId, mailboxAddress, mailboxesLoading, titleTotal, titleUnread]);
+
+	useEffect(() => {
+		if (isLoading) return;
+		setSelectedMessages((current) => {
+			const remaining = current.filter((item) => messages.some((message) => message.id === item.id));
+			return remaining.length === current.length ? current : remaining;
+		});
+	}, [messages, isLoading]);
+
+	useEffect(() => {
+		if (isLoading || offset === 0 || messages.length > 0) return;
+		setOffset(total > 0 ? Math.floor((total - 1) / limit) * limit : 0);
+	}, [isLoading, offset, messages.length, total, limit]);
 
 	function updateSelectedMessage(messageId: string, selected: boolean) {
 		const message = messages.find((item) => item.id === messageId);
@@ -399,6 +421,21 @@ export function MessageFolderPage({
 			window.alert(t("list.emptyFailed", { folder: getPermanentDeleteFolderLabel(permanentDeleteFolder, t) }));
 		} finally {
 			setEmptyingFolder(false);
+		}
+	}
+
+	useEffect(() => {
+		if (!actionError) return;
+		const timer = setTimeout(() => setActionError(null), 6000);
+		return () => clearTimeout(timer);
+	}, [actionError]);
+
+	async function runSelectedActionReportingErrors(action: BulkMessageAction, folderId?: string) {
+		setActionError(null);
+		try {
+			await runSelectedAction(action, folderId);
+		} catch {
+			setActionError(t("actions.error.update"));
 		}
 	}
 
@@ -459,7 +496,7 @@ export function MessageFolderPage({
 						<BulkMessageToolbar
 							selectedCount={selectedIds.length}
 							hasUnreadSelection={hasUnreadSelection}
-							onAction={runSelectedAction}
+							onAction={runSelectedActionReportingErrors}
 							onClearSelection={() => setSelectedMessages([])}
 							pending={pendingBulkAction}
 							folder={config.folderId ? undefined : config.folder}
@@ -535,6 +572,12 @@ export function MessageFolderPage({
 				)}
 			</div>
 
+			{actionError && (
+				<p role="alert" className="shrink-0 border-b border-red-100 bg-red-50 px-6 py-2 text-sm font-medium text-red-700">
+					{actionError}
+				</p>
+			)}
+
 			<div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-gutter-stable">
 				<div role="list" aria-label={title} className="divide-y divide-neutral-100">
 					{messages.map((message) => (
@@ -547,9 +590,13 @@ export function MessageFolderPage({
 							compact={compact || isMobile}
 							currentAccountName={currentAccountName}
 							onSelectedChange={updateSelectedMessage}
-							onMessageAction={(messageId, action) =>
-								runBulkMessageAction(expandSelectedIds([messageId]), action, action !== "read" && action !== "unread")
-							}
+							onMessageAction={(messageId, action) => {
+								setActionError(null);
+								return runBulkMessageAction(expandSelectedIds([messageId]), action, action !== "read" && action !== "unread").catch((error) => {
+									setActionError(t("actions.error.update"));
+									throw error;
+								});
+							}}
 							dragMessageIds={expandSelectedIds(selectedIds.includes(message.id) ? selectedIds : [message.id])}
 						/>
 					))}
