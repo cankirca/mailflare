@@ -300,7 +300,7 @@ export default function SettingsImportPage() {
               <>
                 <form onSubmit={onFileSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label>{t("importPage.selectFile")}</Label>
+                    <Label htmlFor="import-files">{t("importPage.selectFile")}</Label>
                     <Input
                       id="import-files"
                       type="file"
