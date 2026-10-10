@@ -14,6 +14,7 @@ import { SidebarResizeBoundary } from "@/components/sidebar-resize-boundary";
 import { SidebarProvider, useSidebar } from "@/components/sidebar-state";
 import { ShortcutsProvider } from "@/components/shortcuts";
 import { DriveNav } from "./drive-nav";
+import { RouteTitle } from "@/components/route-title";
 
 function DriveFrame({ children }: { children: React.ReactNode }) {
 	const { mobile, toggle } = useSidebar();
@@ -49,6 +50,7 @@ export default function DriveLayout({ children }: { children: React.ReactNode })
 					<ComposeProvider>
 						<MailSearchProvider>
 							<ShortcutsProvider>
+							  <RouteTitle />
 								<DriveFrame>{children}</DriveFrame>
 							</ShortcutsProvider>
 						</MailSearchProvider>
