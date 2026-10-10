@@ -224,6 +224,7 @@ export default function SettingsImportPage() {
 
   return (
     <div className="space-y-6">
+      <h1 className="sr-only">{t("settings.nav.import")}</h1>
       {/* <div>
         <h1 className="text-2xl md:text-3xl font-medium text-neutral-900">Import</h1>
         <p className="mt-1 text-sm text-neutral-500">
@@ -300,7 +301,7 @@ export default function SettingsImportPage() {
               <>
                 <form onSubmit={onFileSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label>{t("importPage.selectFile")}</Label>
+                    <Label htmlFor="import-files">{t("importPage.selectFile")}</Label>
                     <Input
                       id="import-files"
                       type="file"

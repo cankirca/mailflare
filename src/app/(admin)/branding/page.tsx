@@ -94,7 +94,7 @@ export default function BrandingPage() {
 								<span className="text-sm text-neutral-600"><ImagePlus className="mb-1 h-5 w-5" />{t("branding.chooseImage")}<br /><span className="text-xs text-neutral-500">{t("branding.maxSize")}</span></span>
 							</button>
 						</div>
-						{status && <p className="text-sm text-neutral-600">{status}</p>}
+						{status && <p role="status" className="text-sm text-neutral-600">{status}</p>}
 						<Button type="submit" disabled={saving || !appName.trim()}>{saving ? t("common.saving") : t("branding.save")}</Button>
 					</form>
 				</CardContent>

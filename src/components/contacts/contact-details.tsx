@@ -145,7 +145,7 @@ export function ContactDetailsTrigger({
 								<p className="text-sm font-medium text-red-600">{t("contact.blocked")}</p>
 							)}
 						</div>
-						{error && <p className="text-sm text-red-600">{error}</p>}
+						{error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 						<Button
 							type="button"
 							onClick={saveContact}

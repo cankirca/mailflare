@@ -1,4 +1,4 @@
-export function collapseQuotedEmailHtml(html: string | null, preserveLeadingQuote = false): string | null {
+export function collapseQuotedEmailHtml(html: string | null, preserveLeadingQuote = false, toggleLabel = "Toggle quoted email"): string | null {
 	if (!html) return null;
 	const template = window.document.createElement("template");
 	template.innerHTML = html;
@@ -19,8 +19,8 @@ export function collapseQuotedEmailHtml(html: string | null, preserveLeadingQuot
 		const details = document.createElement("details");
 		details.className = "email-quote-toggle";
 		const summary = document.createElement("summary");
-		summary.setAttribute("aria-label", "Toggle quoted email");
-		summary.setAttribute("title", "Show or hide quoted email");
+		summary.setAttribute("aria-label", toggleLabel);
+		summary.setAttribute("title", toggleLabel);
 		const content = document.createElement("div");
 		content.className = "email-quote-content";
 		introduction.parentNode?.insertBefore(details, introduction);

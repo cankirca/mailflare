@@ -192,8 +192,8 @@ export function AdminUpdateCard() {
 						)}
 					</p>
 				)}
-				{error && <p className="text-sm text-red-600">{error}</p>}
-				{migrationError && <p className="text-sm text-red-600">{migrationError}</p>}
+				{error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+				{migrationError && <p role="alert" className="text-sm text-red-600">{migrationError}</p>}
 			</CardContent>
 		</Card>
 	);
