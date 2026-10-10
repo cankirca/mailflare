@@ -95,6 +95,8 @@ export function useHotkeys(
 
       if (isModifierKey(key)) return;
 
+      if (e.target instanceof Element && e.target.closest('[role="dialog"], [role="menu"], [role="listbox"]')) return;
+
       // Handle sequence buffer
       sequenceBufferRef.current.push(key);
 
