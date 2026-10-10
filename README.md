@@ -41,7 +41,7 @@ Want to support the mailflare? <a target="_blank" href="https://store.paymug.co/
 
 Mailflare runs in your Cloudflare account. By default, Cloudflare Email Routing delivers incoming mail to the app, and Cloudflare's email service sends outgoing mail. Each domain can also receive or send through Resend or Amazon SES. Cloudflare still manages the DNS.
 
-Your mail stays in your own D1 database, and attachments stay in your own R2 bucket, whichever provider you use. See [Sending and receiving providers](docs/providers.md).
+Your mail stays in your own D1 database, and attachments stay in your own R2, Backblaze B2 or AWS S3 bucket, whichever provider you use. See [Sending and receiving providers](docs/providers.md).
 
 ## Cost
 
@@ -104,7 +104,7 @@ See the [deployment guide](docs/deployment.md) for permissions, manual deploymen
 
 ### Self-host with Docker
 
-Mailflare also runs as one container on any server. It uses SQLite and local files instead of D1 and R2.
+Mailflare also runs as one container on any server. It uses SQLite and local files instead of D1 and R2 (Backblaze B2 can replace the local files).
 
 - **Inbound mail**: a built-in SMTP listener, or a small Cloudflare relay Worker if you want to keep MX on Cloudflare.
 - **Outbound mail**: any SMTP relay, Cloudflare Email Sending, Resend, or Amazon SES.
@@ -139,7 +139,7 @@ The Node/Docker runtime still uses Next.js with `build:node`, `start:node`, and 
 
 Everyone can switch language from the homepage or sign-in page, and signed-in users can set it under **Settings → Account → General**, next to their time zone. The choice is kept in a cookie, so server-rendered pages use it too.
 
-To add a language, create a catalog next to `src/lib/i18n/en.json` with the same keys, then register it in `src/lib/i18n/locales.ts` with its native name (add `dir: "rtl"` for right-to-left scripts). The selector, validation, and cookie handling pick it up from that registry. Missing keys fall back to English. English ships in the main bundle; other catalogs load on demand.
+To add a language, create `public/locales/<code>.json` with the same keys as `src/lib/i18n/en.json`, then register it in `src/lib/i18n/locales.ts` with its native name (add `dir: "rtl"` for right-to-left scripts). The selector, validation, and cookie handling pick it up from that registry. Missing keys fall back to English. English ships in the main bundle; other catalogs are static assets loaded on demand, outside the Worker size limit.
 
 ## Documentation
 
