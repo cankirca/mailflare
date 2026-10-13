@@ -47,6 +47,7 @@ export function PoweredBy({ className = "px-1" }: { className?: string }) {
           rel="noreferrer"
         >
           Mailflare v{packageJson.version}
+          <span className="sr-only"> ({t("common.opensInNewTab")})</span>
         </a>
       </p>
 	);

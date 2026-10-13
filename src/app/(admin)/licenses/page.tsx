@@ -69,7 +69,8 @@ export default async function LicensesPage() {
                     rel="noopener noreferrer"
                   >
                     {t("licenses.get", { plan: plan.name })}
-                    <ExternalLink className="h-4 w-4" />
+                    <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                    <span className="sr-only"> ({t("common.opensInNewTab")})</span>
                   </a>
                 </Button>
               </CardContent>
